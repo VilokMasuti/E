@@ -1,5 +1,6 @@
 'use client';
 
+// Import necessary libraries and components
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -19,6 +20,7 @@ import { Input } from '../components/ui/input';
 import type { RootState } from '../store';
 import { removeFromCart, updateQuantity } from '../store/slices/cartSlice';
 
+// Define the schema for the checkout form using Zod
 const checkoutSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
@@ -28,10 +30,12 @@ const checkoutSchema = z.object({
 });
 
 const CartPage = () => {
+  // Retrieve cart items from the Redux store
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const dispatch = useDispatch();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
+  // Initialize the form using react-hook-form and Zod
   const form = useForm<z.infer<typeof checkoutSchema>>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
@@ -41,54 +45,66 @@ const CartPage = () => {
     },
   });
 
+  // Function to remove an item from the cart
   const handleRemoveItem = (id: number) => {
     dispatch(removeFromCart(id));
   };
 
+  // Function to update the quantity of an item in the cart
   const handleUpdateQuantity = (id: number, quantity: number) => {
     if (quantity > 0) {
       dispatch(updateQuantity({ id, quantity }));
     }
   };
 
+  // Calculate the total price of all items in the cart
   const totalPrice = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
 
+  // Function to handle form submission
   const onSubmit = (values: z.infer<typeof checkoutSchema>) => {
-    // Here would typically send the order to your backend
+    // Log the order details (you would typically send this to a backend)
     console.log('Order submitted:', {
       ...values,
       items: cartItems,
       total: totalPrice,
     });
-    // Reset the form and cart after successful submission
+    // Reset the form after submission
     form.reset();
-    // You would typically clear the cart here as well
+    // Optionally, clear the cart here
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl mb-8 font-mono  font-semibold ">Your Cart</h1>
+      <h1 className="text-2xl mb-8 font-mono font-semibold">Your Cart</h1>
       {cartItems.length === 0 ? (
+        // Display a message if the cart is empty
         <p className="text-center font-semibold font-mono text-gray-500">
           Your cart is empty
         </p>
       ) : (
+        // Display the cart items and order summary
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="w-full lg:w-2/3">
             {cartItems.map((item) => (
               <div key={item.id} className="flex items-center border-b py-4">
+                {/* Display the product image */}
                 <img
-                  src={`https://dummyjson.com/image/i/products/${item.id}/thumbnail.jpg`}
+                  src={item.thumbnail || ''} // Fallback to a placeholder if the image is missing
                   alt={item.title}
                   className="w-24 h-24 object-cover rounded-md mr-4"
+                  onError={(e) => {
+                    // Fallback to a placeholder if the image fails to load
+                    (e.target as HTMLImageElement).src = '/placeholder.svg';
+                  }}
                 />
                 <div className="flex-grow">
                   <h3 className="text-lg font-semibold">{item.title}</h3>
                   <p className="text-gray-600">${item.price.toFixed(2)}</p>
                   <div className="flex items-center mt-2">
+                    {/* Decrease quantity button */}
                     <button
                       onClick={() =>
                         handleUpdateQuantity(item.id, item.quantity - 1)
@@ -97,6 +113,7 @@ const CartPage = () => {
                     >
                       -
                     </button>
+                    {/* Quantity input */}
                     <input
                       type="number"
                       value={item.quantity}
@@ -108,6 +125,7 @@ const CartPage = () => {
                       }
                       className="border-t border-b px-2 py-1 w-16 text-center"
                     />
+                    {/* Increase quantity button */}
                     <button
                       onClick={() =>
                         handleUpdateQuantity(item.id, item.quantity + 1)
@@ -118,6 +136,7 @@ const CartPage = () => {
                     </button>
                   </div>
                 </div>
+                {/* Remove item button */}
                 <button
                   onClick={() => handleRemoveItem(item.id)}
                   className="text-red-500 hover:text-red-700"
@@ -127,6 +146,7 @@ const CartPage = () => {
               </div>
             ))}
           </div>
+          {/* Order summary section */}
           <div className="w-full lg:w-1/3">
             <div className="bg-gray-100 rounded-lg p-6">
               <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
@@ -142,6 +162,7 @@ const CartPage = () => {
                 <span>Total</span>
                 <span>${totalPrice.toFixed(2)}</span>
               </div>
+              {/* Checkout button */}
               <Button
                 className="w-full mt-6"
                 onClick={() => setIsCheckingOut(true)}
@@ -152,6 +173,7 @@ const CartPage = () => {
           </div>
         </div>
       )}
+      {/* Checkout modal */}
       {isCheckingOut && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-8 max-w-md w-full">
@@ -161,6 +183,7 @@ const CartPage = () => {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
+                {/* Email field */}
                 <FormField
                   control={form.control}
                   name="email"
@@ -174,6 +197,7 @@ const CartPage = () => {
                     </FormItem>
                   )}
                 />
+                {/* Name field */}
                 <FormField
                   control={form.control}
                   name="name"
@@ -187,6 +211,7 @@ const CartPage = () => {
                     </FormItem>
                   )}
                 />
+                {/* Address field */}
                 <FormField
                   control={form.control}
                   name="address"
@@ -203,6 +228,7 @@ const CartPage = () => {
                     </FormItem>
                   )}
                 />
+                {/* Cancel and submit buttons */}
                 <div className="flex justify-end space-x-2">
                   <Button
                     type="button"

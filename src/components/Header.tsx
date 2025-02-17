@@ -10,7 +10,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartItemsCount = cartItems.reduce(
-    (total, item) => total + item.quantity,
+    (total: number, item: { quantity: number }) => total + item.quantity,
     0
   );
 
